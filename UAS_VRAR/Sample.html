@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@7.1.0/dist/aframe-extras.min.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <a-scene embedded arjs>
+        <!-- Define the Freddy marker -->
+        <a-marker
+                id="freddy-marker"
+                type="pattern"
+                preset="custom"
+                url="Marker/Freddy.patt"
+                emitevents="true"
+            >
+            <!-- Load the Freddy 3D model with animation -->
+            <a-entity 
+                id="freddyModel"
+                gltf-model="url(Model/Freddy/freddy.glb)"
+                scale="1 1 1"
+                animation-mixer="clip: oldfreddy_wires_skeleton|idle; loop: repeat;">
+                <a-sound id="freddy-sound" src="BGM/Freddy BGM.mp3" autoplay="false"></a-sound>
+            </a-entity>
+        </a-marker>
+
+        <!-- Define the Bonnie marker -->
+        <a-marker
+                id="bonnie-marker"
+                type="pattern"
+                preset="custom"
+                url="Marker/Bonnie.patt"
+                emitevents="true"
+            >
+            <!-- Load the Bonnie 3D model with animation -->
+            <a-entity 
+                id="bonnieModel"
+                gltf-model="url(Model/Bonnie/bonnie.glb)"
+                scale="1 1 1"
+                animation-mixer="clip: oldbonnie_bowtie_skeleton|idle; loop: repeat;">
+                <a-sound id="bonnie-sound" src="BGM/Bonnie BGM.mp3" autoplay="false"></a-sound>
+            </a-entity>
+        </a-marker>
+
+        <!-- Define the Foxy marker -->
+        <a-marker
+                id="foxy-marker"
+                type="pattern"
+                preset="custom"
+                url="Marker/Foxy 2.patt"
+                emitevents="true"
+            >
+            <!-- Load the Foxy 3D model with animation -->
+            <a-entity 
+                id="foxyModel"
+                gltf-model="url(Model/Foxy/foxy.glb)"
+                scale="0.5 0.5 0.5"
+                animation-mixer="clip: oldfoxy_wire_skeleton|idle; loop: repeat;">
+                <a-sound id="foxy-sound" src="BGM/Foxy BGM.mp3" autoplay="false"></a-sound>
+            </a-entity>
+        </a-marker>
+
+        <!-- Define the camera -->
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        AFRAME.registerComponent('log', {
+            init: function () {
+                console.log('Component initialized');
+                this.el.addEventListener('model-loaded', () => {
+                    console.log('Model loaded');
+                });
+                this.el.addEventListener('animation-finished', () => {
+                    console.log('Animation finished');
+                });
+            }
+        });
+
+        document.querySelectorAll('a-entity').forEach(el => {
+            el.setAttribute('log', '');
+        });
+
+        // Animation sequences
+        const freddyAnimations = ['oldfreddy_wires_skeleton|deactiv', 'oldfreddy_wires_skeleton|activ', 'oldfreddy_wires_skeleton|idle'];
+        const bonnieAnimations = ['oldbonnie_bowtie_skeleton|deactiv', 'oldbonnie_bowtie_skeleton|activ', 'oldbonnie_bowtie_skeleton|idle'];
+        const foxyAnimations = ['oldfoxy_wire_skeleton|deactiv', 'oldfoxy_wire_skeleton|activ', 'oldfoxy_wire_skeleton|idle'];
+
+        let freddyIndex = 0;
+        let bonnieIndex = 0;
+        let foxyIndex = 0;
+
+        function playNextAnimation(modelId, animations, index) {
+            const model = document.querySelector(modelId);
+            model.setAttribute('animation-mixer', {
+                clip: animations[index],
+                loop: 'once',
+                clampWhenFinished: true
+            });
+            return (index + 1) % animations.length;
+        }
+
+        function setIdleAnimation(modelId, idleAnimation) {
+            const model = document.querySelector(modelId);
+            model.setAttribute('animation-mixer', {
+                clip: idleAnimation,
+                loop: 'repeat'
+            });
+        }
+
+        document.querySelector('#freddyModel').addEventListener('animation-finished', () => {
+            freddyIndex = playNextAnimation('#freddyModel', freddyAnimations, freddyIndex);
+        });
+        document.querySelector('#freddyModel').addEventListener('model-loaded', () => {
+            freddyIndex = playNextAnimation('#freddyModel', freddyAnimations, freddyIndex);
+        });
+
+        document.querySelector('#bonnieModel').addEventListener('animation-finished', () => {
+            bonnieIndex = playNextAnimation('#bonnieModel', bonnieAnimations, bonnieIndex);
+        });
+        document.querySelector('#bonnieModel').addEventListener('model-loaded', () => {
+            bonnieIndex = playNextAnimation('#bonnieModel', bonnieAnimations, bonnieIndex);
+        });
+
+        document.querySelector('#foxyModel').addEventListener('animation-finished', () => {
+            foxyIndex = playNextAnimation('#foxyModel', foxyAnimations, foxyIndex);
+        });
+        document.querySelector('#foxyModel').addEventListener('model-loaded', () => {
+            foxyIndex = playNextAnimation('#foxyModel', foxyAnimations, foxyIndex);
+        });
+
+        // Play/stop sound on marker found/lost
+        let detectedMarkers = new Set();
+
+        function checkMultipleMarkers() {
+            if (detectedMarkers.size === 1) {
+                detectedMarkers.forEach(markerId => {
+                    const sound = document.querySelector(`${markerId} a-sound`);
+                    if (sound) {
+                        sound.components.sound.playSound();
+                    }
+                });
+                setSingleMarkerAnimations();
+            } else {
+                document.querySelectorAll('a-sound').forEach(sound => {
+                    sound.components.sound.stopSound();
+                });
+                setMultipleMarkersAnimations();
+            }
+        }
+
+        function setMultipleMarkersAnimations() {
+            setIdleAnimation('#freddyModel', 'oldfreddy_wires_skeleton|idle');
+            setIdleAnimation('#bonnieModel', 'oldbonnie_bowtie_skeleton|idle');
+            setIdleAnimation('#foxyModel', 'oldfoxy_wire_skeleton|idle');
+        }
+
+        function setSingleMarkerAnimations() {
+        const freddyMarker = document.querySelector('#freddy-marker');
+        if (freddyMarker && detectedMarkers.has('#freddy-marker')) {
+            setIdleAnimation('#freddyModel', freddyAnimations[freddyIndex]);
+        }
+
+        const bonnieMarker = document.querySelector('#bonnie-marker');
+        if (bonnieMarker && detectedMarkers.has('#bonnie-marker')) {
+            setIdleAnimation('#bonnieModel', bonnieAnimations[bonnieIndex]);
+        }
+
+        const foxyMarker = document.querySelector('#foxy-marker');
+        if (foxyMarker && detectedMarkers.has('#foxy-marker')) {
+            setIdleAnimation('#foxyModel', foxyAnimations[foxyIndex]);
+        }
+    }
+
+        ['#freddy-marker', '#bonnie-marker', '#foxy-marker'].forEach(markerId => {
+            const marker = document.querySelector(markerId);
+            marker.addEventListener('markerFound', () => {
+                detectedMarkers.add(markerId);
+                checkMultipleMarkers();
+            });
+            marker.addEventListener('markerLost', () => {
+                detectedMarkers.delete(markerId);
+                checkMultipleMarkers();
+            });
+        });
+    </script>
+
+</body>
+</html>

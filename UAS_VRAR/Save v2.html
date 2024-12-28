@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@7.1.0/dist/aframe-extras.min.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <a-scene embedded arjs>
+        <!-- Define the single marker -->
+        <a-marker
+                id="multi-marker"
+                type="pattern"
+                preset="custom"
+                url="Marker/Freddy.patt"
+                emitevents="true">
+            <!-- Load the Freddy 3D model with animation -->
+            <a-entity 
+                id="freddyModel"
+                gltf-model="url(Model/Freddy/freddy.glb)"
+                position="-1 0 0"
+                scale="0.5 0.5 0.5"
+                animation-mixer="clip: oldfreddy_wires_skeleton|deactiv; loop: once; clampWhenFinished: true;">
+            </a-entity>
+            <!-- Load the Bonnie 3D model with animation -->
+            <a-entity 
+                id="bonnieModel"
+                gltf-model="url(Model/Bonnie/bonnie.glb)"
+                position="0 0 0"
+                scale="0.5 0.5 0.5"
+                animation-mixer="clip: oldbonnie_bowtie_skeleton|deactiv; loop: once; clampWhenFinished: true;">
+            </a-entity>
+            <!-- Load the Foxy 3D model with animation -->
+            <a-entity 
+                id="foxyModel"
+                gltf-model="url(Model/Foxy/foxy.glb)"
+                position="1 0 0"
+                scale="0.3 0.3 0.3"
+                animation-mixer="clip: oldfoxy_wire_skeleton|deactiv; loop: once; clampWhenFinished: true;">
+            </a-entity>
+            <!-- Load the background music -->
+            <a-sound id="bgm-sound" src="BGM/ARARAR.mp3" autoplay="false" loop="true"></a-sound>
+        </a-marker>
+
+        <!-- Define the camera -->
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        AFRAME.registerComponent('log', {
+            init: function () {
+                console.log('Component initialized');
+                this.el.addEventListener('model-loaded', () => {
+                    console.log('Model loaded:', this.el.getAttribute('id'));
+                });
+                this.el.addEventListener('animation-finished', () => {
+                    console.log('Animation finished:', this.el.getAttribute('id'));
+                });
+            }
+        });
+
+        document.querySelectorAll('a-entity').forEach(el => {
+            el.setAttribute('log', '');
+        });
+
+        // Animation sequences
+        const freddyAnimations = ['oldfreddy_wires_skeleton|deactiv', 'oldfreddy_wires_skeleton|activ'];
+        const bonnieAnimations = ['oldbonnie_bowtie_skeleton|deactiv', 'oldbonnie_bowtie_skeleton|activ'];
+        const foxyAnimations = ['oldfoxy_wire_skeleton|deactiv', 'oldfoxy_wire_skeleton|activ'];
+
+        let freddyIndex = 0;
+        let bonnieIndex = 0;
+        let foxyIndex = 0;
+
+        function playNextAnimation(modelId, animations, index) {
+            const model = document.querySelector(modelId);
+            model.setAttribute('animation-mixer', {
+                clip: animations[index],
+                loop: 'once',
+                clampWhenFinished: true
+            });
+            return (index + 1) % animations.length;
+        }
+
+        document.querySelector('#freddyModel').addEventListener('animation-finished', () => {
+            freddyIndex = playNextAnimation('#freddyModel', freddyAnimations, freddyIndex);
+        });
+        document.querySelector('#freddyModel').addEventListener('model-loaded', () => {
+            freddyIndex = playNextAnimation('#freddyModel', freddyAnimations, freddyIndex);
+        });
+
+        document.querySelector('#bonnieModel').addEventListener('animation-finished', () => {
+            bonnieIndex = playNextAnimation('#bonnieModel', bonnieAnimations, bonnieIndex);
+        });
+        document.querySelector('#bonnieModel').addEventListener('model-loaded', () => {
+            bonnieIndex = playNextAnimation('#bonnieModel', bonnieAnimations, bonnieIndex);
+        });
+
+        document.querySelector('#foxyModel').addEventListener('animation-finished', () => {
+            foxyIndex = playNextAnimation('#foxyModel', foxyAnimations, foxyIndex);
+        });
+        document.querySelector('#foxyModel').addEventListener('model-loaded', () => {
+            foxyIndex = playNextAnimation('#foxyModel', foxyAnimations, foxyIndex);
+        });
+
+        // Play/stop sound on marker found/lost
+        const marker = document.querySelector('#multi-marker');
+        marker.addEventListener('markerFound', () => {
+            console.log('Marker found');
+            const bgm = document.querySelector('#bgm-sound');
+            bgm.components.sound.playSound();
+        });
+        marker.addEventListener('markerLost', () => {
+            console.log('Marker lost');
+            const bgm = document.querySelector('#bgm-sound');
+            bgm.components.sound.stopSound();
+        });
+    </script>
+</body>
+</html>

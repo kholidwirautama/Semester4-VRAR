@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@7.1.0/dist/aframe-extras.min.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <a-scene embedded arjs>
+        <!-- Define the marker -->
+        <a-marker
+                id="animated-marker"
+                type="pattern"
+                preset="custom"
+                url="Marker/Freddy.patt"
+                raycaster="objects: .clickable"
+                emitevents="true"
+                cursor="fuse: false; rayOrigin: mouse;"
+                id="markerA"
+            >
+            <!-- Load the 3D model with animation -->
+            <a-entity 
+                id="animatedModel"
+                gltf-model="url(Model/Freddy/freddy.glb)"
+                scale="1 1 1"
+                animation-mixer="clip: oldfreddy_wires_skeleton|deactiv; loop: once; clampWhenFinished: true;">
+                <a-sound src="url(BGM/FNAF Soundtrac.mp3)" autoplay="false"></a-sound>
+                
+            </a-entity>
+        </a-marker>
+
+        <!-- Define the marker -->
+        <a-marker
+                id="animated-marker"
+                type="pattern"
+                preset="custom"
+                url="Marker/Freddy.patt"
+                raycaster="objects: .clickable"
+                emitevents="true"
+                cursor="fuse: false; rayOrigin: mouse;"
+                id="markerA"
+            >
+            <!-- Load the 3D model with animation -->
+            <a-entity 
+                id="animatedModel"
+                gltf-model="url(Model/Freddy/freddy.glb)"
+                scale="1 1 1"
+                animation-mixer="clip: oldfreddy_wires_skeleton|deactiv; loop: once; clampWhenFinished: true;">
+                <a-sound src="url(BGM/FNAF Soundtrac.mp3)" autoplay="false"></a-sound>
+                
+            </a-entity>
+        </a-marker>
+
+        <!-- Define the marker -->
+        <a-marker
+                id="animated-marker"
+                type="pattern"
+                preset="custom"
+                url="Marker/Freddy.patt"
+                raycaster="objects: .clickable"
+                emitevents="true"
+                cursor="fuse: false; rayOrigin: mouse;"
+                id="markerA"
+            >
+            <!-- Load the 3D model with animation -->
+            <a-entity 
+                id="animatedModel"
+                gltf-model="url(Model/Freddy/freddy.glb)"
+                scale="1 1 1"
+                animation-mixer="clip: oldfreddy_wires_skeleton|deactiv; loop: once; clampWhenFinished: true;">
+                <a-sound src="url(BGM/FNAF Soundtrac.mp3)" autoplay="false"></a-sound>
+                
+            </a-entity>
+        </a-marker>
+        
+
+        <!-- Define the camera -->
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        AFRAME.registerComponent('log', {
+            init: function () {
+                console.log('Component initialized');
+                this.el.addEventListener('model-loaded', () => {
+                    console.log('Model loaded');
+                });
+                this.el.addEventListener('animation-finished', () => {
+                    console.log('Animation finished');
+                });
+            }
+        });
+
+        document.querySelector('#animatedModel').setAttribute('log', '');
+
+        // Sequence of animations
+        const animationSequence = [
+            'oldfreddy_wires_skeleton|deactiv',
+            'oldfreddy_wires_skeleton|activ'
+        ];
+
+        let currentAnimationIndex = 0;
+
+        // Function to set the next animation in the sequence
+        function playNextAnimation() {
+            const animatedModel = document.querySelector('#animatedModel');
+            animatedModel.setAttribute('animation-mixer', {
+                clip: animationSequence[currentAnimationIndex],
+                loop: 'once',
+                clampWhenFinished: true
+            });
+            currentAnimationIndex = (currentAnimationIndex + 1) % animationSequence.length;
+        }
+
+        // Play the next animation when the current one finishes
+        document.querySelector('#animatedModel').addEventListener('animation-finished', playNextAnimation);
+
+        // Start with the first animation
+        document.querySelector('#animatedModel').addEventListener('model-loaded', function(event) {
+            playNextAnimation();
+        });
+
+        // Check for any errors in loading the GLTF model
+        document.querySelector('#animatedModel').addEventListener('model-error', function(event) {
+            console.error('Error loading model:', event.detail);
+        });
+    </script>
+
+    <script>
+        document.querySelector('#animated-marker').addEventListener('markerFound', () => {
+            document.querySelector('a-sound').components.sound.playSound();
+        });
+
+        document.querySelector('#animated-marker').addEventListener('markerLost', () => {
+            document.querySelector('a-sound').components.sound.stopSound();
+        });
+    </script>
+</body>
+</html>

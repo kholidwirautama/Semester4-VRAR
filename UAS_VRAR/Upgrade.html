@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@7.1.0/dist/aframe-extras.min.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <a-scene embedded arjs>
+        <!-- Define the single marker -->
+        <a-marker
+                id="multi-marker"
+                type="pattern"
+                preset="custom"
+                url="https://raw.githubusercontent.com/VestiaK/VR---AR/main/Test/Test/Marker/fnaf2.patt"
+                emitevents="true">
+            <!-- Load the Freddy 3D model with animation -->
+            <a-entity 
+                id="freddyModel"
+                gltf-model="url(https://raw.githubusercontent.com/VestiaK/VR---AR/main/Test/Test/Model/Freddy/freddy.glb)"
+                position="-1 0 0"
+                scale="0.5 0.5 0.5"
+                animation-mixer="clip: oldfreddy_wires_skeleton|deactiv; loop: once; clampWhenFinished: true;"
+                class="interactive">
+            </a-entity>
+            <!-- Load the Bonnie 3D model with animation -->
+            <a-entity 
+                id="bonnieModel"
+                gltf-model="url(https://raw.githubusercontent.com/VestiaK/VR---AR/main/Test/Test/Model/Bonnie/bonnie.glb)"
+                position="0 0 0"
+                scale="0.5 0.5 0.5"
+                animation-mixer="clip: oldbonnie_bowtie_skeleton|deactiv; loop: once; clampWhenFinished: true;"
+                class="interactive">
+            </a-entity>
+            <!-- Load the Foxy 3D model with animation -->
+            <a-entity 
+                id="foxyModel"
+                gltf-model="url(https://raw.githubusercontent.com/VestiaK/VR---AR/main/Test/Test/Model/Foxy/foxy.glb)"
+                position="1 0 0"
+                scale="0.3 0.3 0.3"
+                animation-mixer="clip: oldfoxy_wire_skeleton|deactiv; loop: once; clampWhenFinished: true;"
+                class="interactive">
+            </a-entity>
+            <!-- Load the background music -->
+            <a-sound id="bgm-sound" src="https://raw.githubusercontent.com/VestiaK/VR---AR/main/Test/Test/BGM/Freddy BGM.mp3" autoplay="false" loop="true"></a-sound>
+        </a-marker>
+
+        <!-- Define the markers for individual models -->
+        <a-marker id="freddy-marker" type="pattern" preset="custom" url="https://raw.githubusercontent.com/VestiaK/VR---AR/main/Test/Test/Marker/Freddy.patt" emitevents="true">
+            <a-entity id="freddyModel" gltf-model="url(https://raw.githubusercontent.com/VestiaK/VR---AR/main/Test/Test/Model/Freddy/freddy.glb)" scale="0.5 0.5 0.5" animation-mixer="clip: oldfreddy_wires_skeleton|deactiv; loop: once; clampWhenFinished: true;"></a-entity>
+        </a-marker>
+
+        <a-marker id="bonnie-marker" type="pattern" preset="custom" url="https://raw.githubusercontent.com/VestiaK/VR---AR/main/Test/Test/Marker/Bonnie.patt" emitevents="true">
+            <a-entity id="bonnieModel" gltf-model="url(https://raw.githubusercontent.com/VestiaK/VR---AR/main/Test/Test/Model/Bonnie/bonnie.glb)" scale="0.5 0.5 0.5" animation-mixer="clip: oldbonnie_bowtie_skeleton|deactiv; loop: once; clampWhenFinished: true;"></a-entity>
+        </a-marker>
+
+        <a-marker id="foxy-marker" type="pattern" preset="custom" url="https://raw.githubusercontent.com/VestiaK/VR---AR/main/Test/Test/Marker/Foxy.patt" emitevents="true">
+            <a-entity id="foxyModel" gltf-model="url(https://raw.githubusercontent.com/VestiaK/VR---AR/main/Test/Test/Model/Foxy/foxy.glb)" scale="0.3 0.3 0.3" animation-mixer="clip: oldfoxy_wire_skeleton|deactiv; loop: once; clampWhenFinished: true;"></a-entity>
+        </a-marker>
+
+        <!-- Define the camera -->
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        // Component to log events
+        AFRAME.registerComponent('log', {
+            init: function () {
+                console.log('Component initialized');
+                this.el.addEventListener('model-loaded', () => {
+                    console.log('Model loaded:', this.el.getAttribute('id'));
+                });
+                this.el.addEventListener('animation-finished', () => {
+                    console.log('Animation finished:', this.el.getAttribute('id'));
+                });
+            }
+        });
+
+        // Add log component to all entities
+        document.querySelectorAll('.interactive').forEach(el => {
+            el.setAttribute('log', '');
+        });
+
+        // Animation sequences
+        const freddyAnimations = ['oldfreddy_wires_skeleton|deactiv', 'oldfreddy_wires_skeleton|activ'];
+        const bonnieAnimations = ['oldbonnie_bowtie_skeleton|deactiv', 'oldbonnie_bowtie_skeleton|activ'];
+        const foxyAnimations = ['oldfoxy_wire_skeleton|deactiv', 'oldfoxy_wire_skeleton|activ'];
+
+        let freddyIndex = 0;
+        let bonnieIndex = 0;
+        let foxyIndex = 0;
+
+        function playNextAnimation(modelId, animations, index) {
+            const model = document.querySelector(modelId);
+            model.setAttribute('animation-mixer', {
+                clip: animations[index],
+                loop: 'once',
+                clampWhenFinished: true
+            });
+            return (index + 1) % animations.length;
+        }
+
+        // Event listeners for model animations
+        document.querySelector('#freddyModel').addEventListener('animation-finished', () => {
+            freddyIndex = playNextAnimation('#freddyModel', freddyAnimations, freddyIndex);
+        });
+        document.querySelector('#freddyModel').addEventListener('model-loaded', () => {
+            freddyIndex = playNextAnimation('#freddyModel', freddyAnimations, freddyIndex);
+        });
+
+        document.querySelector('#bonnieModel').addEventListener('animation-finished', () => {
+            bonnieIndex = playNextAnimation('#bonnieModel', bonnieAnimations, bonnieIndex);
+        });
+        document.querySelector('#bonnieModel').addEventListener('model-loaded', () => {
+            bonnieIndex = playNextAnimation('#bonnieModel', bonnieAnimations, bonnieIndex);
+        });
+
+        document.querySelector('#foxyModel').addEventListener('animation-finished', () => {
+            foxyIndex = playNextAnimation('#foxyModel', foxyAnimations, foxyIndex);
+        });
+        document.querySelector('#foxyModel').addEventListener('model-loaded', () => {
+            foxyIndex = playNextAnimation('#foxyModel', foxyAnimations, foxyIndex);
+        });
+
+        // Play/stop sound on marker found/lost
+        const marker = document.querySelector('#multi-marker');
+        marker.addEventListener('markerFound', () => {
+            console.log('Marker found');
+            const bgm = document.querySelector('#bgm-sound');
+            bgm.components.sound.playSound();
+        });
+        marker.addEventListener('markerLost', () => {
+            console.log('Marker lost');
+            const bgm = document.querySelector('#bgm-sound');
+            bgm.components.sound.stopSound();
+        });
+
+        // Interaction with models
+        document.querySelectorAll('.interactive').forEach(model => {
+            model.addEventListener('click', () => {
+                console.log('Model clicked:', model.getAttribute('id'));
+                model.setAttribute('animation-mixer', {
+                    clip: model.getAttribute('animation-mixer').clip === 'activ' ? 'deactiv' : 'activ',
+                    loop: 'once',
+                    clampWhenFinished: true
+                });
+            });
+        });
+    </script>
+</body>
+</html>
